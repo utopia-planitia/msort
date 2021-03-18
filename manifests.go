@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"log"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 
@@ -87,4 +90,26 @@ func parseManifest(yml string) (manifest, error) {
 	m.yaml = yml
 
 	return m, nil
+}
+
+func (m manifest) Print() (string, error) {
+	return m.yaml, nil
+}
+
+func (m manifest) SortedByKeys() (string, error) {
+	cmd := exec.Command("yq", "-Y", "-S")
+
+	cmd.Stderr = os.Stderr
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stdin = strings.NewReader(m.yaml)
+
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	yaml := strings.TrimSuffix(out.String(), "\n")
+
+	return yaml, nil
 }

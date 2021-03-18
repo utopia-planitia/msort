@@ -26,7 +26,19 @@ func main() {
 			}
 		}
 
-		_, err := fmt.Printf("---\n%s\n", manifest.yaml)
+		yaml, err := manifest.Print()
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		if os.Getenv("DISABLE_KEY_SORTING") == "" {
+			yaml, err = manifest.SortedByKeys()
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+		}
+
+		_, err = fmt.Printf("---\n%s\n", yaml)
 		if err != nil {
 			log.Fatalln(err.Error())
 		}
