@@ -66,7 +66,7 @@ func splitManifests(yml string) []manifest {
 			continue
 		}
 		if err != nil {
-			log.Panicln(err)
+			log.Panicf("parse yaml failed: %v: %v", err, doc)
 		}
 
 		manifests = append(manifests, manifest)
