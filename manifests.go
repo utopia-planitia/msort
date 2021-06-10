@@ -2,14 +2,14 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log"
-	"os"
-	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type manifest struct {
@@ -96,20 +96,57 @@ func (m manifest) Print() (string, error) {
 	return m.yaml, nil
 }
 
-func (m manifest) SortedByKeys() (string, error) {
-	cmd := exec.Command("yq", "-Y", "-S")
+func SortedByKeys(in string) (string, error) {
+	dec := yaml.NewDecoder(strings.NewReader(in))
 
-	cmd.Stderr = os.Stderr
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stdin = strings.NewReader(m.yaml)
-
-	err := cmd.Run()
+	var doc yaml.Node
+	err := dec.Decode(&doc)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("decode yaml: %v", err)
 	}
 
-	yaml := strings.TrimSuffix(out.String(), "\n")
+	sortYAML(&doc)
 
-	return yaml, nil
+	out := bytes.NewBuffer(nil)
+
+	enc := yaml.NewEncoder(out)
+	defer enc.Close()
+
+	enc.SetIndent(2)
+
+	err = enc.Encode(&doc)
+	if err != nil {
+		return "", fmt.Errorf("encode yaml: %v", err)
+	}
+
+	return out.String(), nil
+}
+
+type byKey []*yaml.Node
+
+func (i byKey) Len() int { return len(i) / 2 }
+
+func (i byKey) Swap(x, y int) {
+	x *= 2
+	y *= 2
+	i[x], i[y] = i[y], i[x]         // keys
+	i[x+1], i[y+1] = i[y+1], i[x+1] // values
+}
+
+func (i byKey) Less(x, y int) bool {
+	x *= 2
+	y *= 2
+	return i[x].Value < i[y].Value
+}
+
+func sortYAML(node *yaml.Node) *yaml.Node {
+	for i, n := range node.Content {
+		node.Content[i] = sortYAML(n)
+	}
+
+	if node.Kind == yaml.MappingNode {
+		sort.Sort(byKey(node.Content))
+	}
+
+	return node
 }

@@ -32,7 +32,7 @@ func main() {
 		}
 
 		if os.Getenv("DISABLE_KEY_SORTING") == "" {
-			yaml, err = manifest.SortedByKeys()
+			yaml, err = SortedByKeys(manifest.yaml)
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
