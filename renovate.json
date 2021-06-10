@@ -12,5 +12,17 @@
     "renovate-bot"
   ],
   "automerge": true,
-  "automergeType": "pr"
+  "automergeType": "pr",
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "^.github/workflows/lint.yml$"
+      ],
+      "matchStrings": [
+        "version: (?<currentValue>.*?)\n"
+      ],
+      "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-tags"
+    }
+  ]
 }
