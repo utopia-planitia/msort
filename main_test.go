@@ -10,9 +10,6 @@ import (
 	"github.com/andreyvit/diff"
 )
 
-//go:embed testdata/case1.golden.yaml
-var goldenCase1 []byte
-
 func Test_main(t *testing.T) {
 	tests := []struct {
 		name      string
