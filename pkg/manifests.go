@@ -42,6 +42,78 @@ func (a ByOrder) Less(i, j int) bool {
 	return a[i].Yaml < a[j].Yaml
 }
 
+type manifests struct {
+	mm []manifest
+}
+
+func NewManifests(yml string) manifests {
+	return manifests{
+		mm: SplitManifests(yml),
+	}
+}
+
+func (m manifests) SortByKeys() error {
+	var err error
+
+	for i := range m.mm {
+		m.mm[i].Yaml, err = SortedByKeys(m.mm[i].Yaml)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m manifests) DropTest() error {
+	filtered := []manifest{}
+
+	for _, manifest := range m.mm {
+		if strings.Contains(strings.ToLower(manifest.Metadata.Name), "test") {
+			continue
+		}
+
+		filtered = append(filtered, manifest)
+	}
+
+	m.mm = filtered
+
+	return nil
+}
+
+func (m manifests) OrderDocuments() {
+	sort.Sort(ByOrder(m.mm))
+}
+
+func (m manifests) String() string {
+	buf := strings.Builder{}
+	first := true
+
+	for _, manifest := range m.mm {
+		yaml := manifest.Print()
+
+		if strings.TrimSpace(yaml) == "" {
+			continue
+		}
+
+		if !first {
+			_, err := buf.WriteString("---\n")
+			if err != nil {
+				log.Fatalf("write document seperator to buffer: %v", err)
+			}
+		}
+
+		first = false
+
+		_, err := buf.WriteString(strings.TrimSpace(yaml) + "\n")
+		if err != nil {
+			log.Fatalf("write document to buffer: %v", err)
+		}
+	}
+
+	return buf.String()
+}
+
 func SplitManifests(yml string) []manifest {
 	yml = strings.TrimSpace(yml)
 
@@ -92,8 +164,8 @@ func parseManifest(yml string) (manifest, error) {
 	return m, nil
 }
 
-func (m manifest) Print() (string, error) {
-	return m.Yaml, nil
+func (m manifest) Print() string {
+	return m.Yaml
 }
 
 func SortedByKeys(in string) (string, error) {

@@ -5,77 +5,97 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sort"
-	"strings"
 
+	"github.com/urfave/cli/v2"
 	msort "github.com/utopia-planitia/msort/pkg"
 )
 
 func main() {
-	err := run()
+	err := run(os.Args)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 }
 
-func run() error {
-	yml := []byte{}
-	var err error = nil
-
-	if len(os.Args) == 1 {
-		yml, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		yml, err = ioutil.ReadFile(os.Args[1])
+func run(args []string) error {
+	app := &cli.App{
+		Name:   "msort",
+		Usage:  "sort yaml manifests",
+		Action: sortYamlFiles,
 	}
+
+	err := app.Run(args)
 	if err != nil {
 		return err
 	}
 
-	manifests := msort.SplitManifests(string(yml))
+	return nil
+}
 
-	if os.Getenv("DISABLE_KEY_SORTING") == "" {
-		for i := range manifests {
-			manifests[i].Yaml, err = msort.SortedByKeys(manifests[i].Yaml)
-			if err != nil {
-				return err
-			}
+func sortYamlFiles(c *cli.Context) error {
+	stdinPipe, err := detectStdinPipe()
+	if err != nil {
+		return fmt.Errorf("detect stdin usage: %v", err)
+	}
+
+	if stdinPipe {
+		yml, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return fmt.Errorf("read stdin: %v", err)
+		}
+
+		manifests := msort.NewManifests(string(yml))
+
+		if os.Getenv("DISABLE_KEY_SORTING") == "" {
+			manifests.SortByKeys()
+		}
+
+		if os.Getenv("KEEP_TESTS") == "" {
+			manifests.DropTest()
+		}
+
+		manifests.OrderDocuments()
+
+		_, err = fmt.Print(manifests.String())
+		if err != nil {
+			return fmt.Errorf("write to stdout: %v", err)
 		}
 	}
 
-	sort.Sort(msort.ByOrder(manifests))
+	for _, path := range c.Args().Slice() {
+		yml, err := ioutil.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read file %s: %v", path, err)
+		}
 
-	first := true
+		manifests := msort.NewManifests(string(yml))
 
-	for _, manifest := range manifests {
+		if os.Getenv("DISABLE_KEY_SORTING") == "" {
+			manifests.SortByKeys()
+		}
+
 		if os.Getenv("KEEP_TESTS") == "" {
-			if strings.Contains(strings.ToLower(manifest.Metadata.Name), "test") {
-				continue
-			}
+			manifests.DropTest()
 		}
 
-		yaml, err := manifest.Print()
+		manifests.OrderDocuments()
+
+		_, err = fmt.Print(manifests.String())
 		if err != nil {
-			return err
-		}
-
-		if strings.TrimSpace(yaml) == "" {
-			continue
-		}
-
-		if !first {
-			_, err = fmt.Print("---\n")
-			if err != nil {
-				return err
-			}
-		}
-
-		first = false
-
-		_, err = fmt.Printf("%s\n", strings.TrimSpace(yaml))
-		if err != nil {
-			return err
+			return fmt.Errorf("write to stdout: %v", err)
 		}
 	}
 
 	return nil
+}
+
+func detectStdinPipe() (bool, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	pipedToStdin := (stat.Mode() & os.ModeCharDevice) == 0
+
+	return pipedToStdin, nil
 }
