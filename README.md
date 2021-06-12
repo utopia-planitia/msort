@@ -2,6 +2,14 @@
 
 msort takes a list of kubernetes manifests as input and sorts them to produce a reproducible artifact.
 
+## Install
+
+Please use go to download, compile and install the binary.
+
+``` bash
+go get -u -v github.com/utopia-planitia/msort
+```
+
 ## Help
 
 ``` bash
