@@ -32,6 +32,12 @@ func Test_main(t *testing.T) {
 			golden:  "testdata/case2.golden.yaml",
 			keySort: true,
 		},
+		{
+			name:    "drop only test",
+			in:      "testdata/case3.yaml",
+			golden:  "testdata/case3.golden.yaml",
+			keySort: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

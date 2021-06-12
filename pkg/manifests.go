@@ -8,9 +8,7 @@ import (
 	"strings"
 )
 
-type manifests struct {
-	manifests []manifest
-}
+type manifests []manifest
 
 func NewManifests(yml string) manifests {
 	yml = strings.TrimSpace(yml)
@@ -25,7 +23,7 @@ func NewManifests(yml string) manifests {
 
 	separator := regexp.MustCompile("\n---\n")
 	chunks := separator.Split(yml, -1)
-	ls := []manifest{}
+	manifests := []manifest{}
 
 	for _, doc := range chunks {
 		doc = strings.TrimSpace(doc)
@@ -42,17 +40,15 @@ func NewManifests(yml string) manifests {
 			log.Panicf("parse yaml failed: %v: %v", err, doc)
 		}
 
-		ls = append(ls, manifest)
+		manifests = append(manifests, manifest)
 	}
 
-	return manifests{
-		manifests: ls,
-	}
+	return manifests
 }
 
 func (m manifests) SortByKeys() error {
-	for i := range m.manifests {
-		err := m.manifests[i].SortByKeys()
+	for i := range m {
+		err := m[i].SortByKeys()
 		if err != nil {
 			return err
 		}
@@ -61,10 +57,10 @@ func (m manifests) SortByKeys() error {
 	return nil
 }
 
-func (m manifests) DropTest() error {
+func (m *manifests) DropTest() error {
 	filtered := []manifest{}
 
-	for _, manifest := range m.manifests {
+	for _, manifest := range *m {
 		if strings.Contains(strings.ToLower(manifest.Metadata.Name), "test") {
 			continue
 		}
@@ -72,20 +68,20 @@ func (m manifests) DropTest() error {
 		filtered = append(filtered, manifest)
 	}
 
-	m.manifests = filtered
+	*m = filtered
 
 	return nil
 }
 
 func (m manifests) SortDocuments() {
-	sort.Sort(byKind(m.manifests))
+	sort.Sort(byKind(m))
 }
 
 func (m manifests) String() string {
 	buf := strings.Builder{}
 	first := true
 
-	for _, manifest := range m.manifests {
+	for _, manifest := range m {
 		yaml := manifest.Print()
 
 		if strings.TrimSpace(yaml) == "" {
