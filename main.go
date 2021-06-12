@@ -19,8 +19,20 @@ func main() {
 
 func run(args []string) error {
 	app := &cli.App{
-		Name:   "msort",
-		Usage:  "sort yaml manifests",
+		Name:  "msort",
+		Usage: "sort yaml manifests",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "sort-keys",
+				Usage: "sort keys within each yaml document",
+				Value: false,
+			},
+			&cli.BoolFlag{
+				Name:  "drop-tests",
+				Usage: "remove yaml documents with \"test\" in its name",
+				Value: false,
+			},
+		},
 		Action: sortYamlFiles,
 	}
 
@@ -38,25 +50,21 @@ func sortYamlFiles(c *cli.Context) error {
 		return fmt.Errorf("detect stdin usage: %v", err)
 	}
 
+	sortKeys := c.Bool("sort-keys")
+	dropTests := c.Bool("drop-tests")
+
 	if stdinPipe {
 		yml, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("read stdin: %v", err)
 		}
 
-		manifests := msort.NewManifests(string(yml))
-
-		if os.Getenv("DISABLE_KEY_SORTING") == "" {
-			manifests.SortByKeys()
+		output, err := msort.Sort(yml, sortKeys, dropTests)
+		if err != nil {
+			return fmt.Errorf("sort stdin: %v", err)
 		}
 
-		if os.Getenv("KEEP_TESTS") == "" {
-			manifests.DropTest()
-		}
-
-		manifests.SortDocuments()
-
-		_, err = fmt.Print(manifests.String())
+		_, err = fmt.Print(output)
 		if err != nil {
 			return fmt.Errorf("write to stdout: %v", err)
 		}
@@ -68,19 +76,12 @@ func sortYamlFiles(c *cli.Context) error {
 			return fmt.Errorf("read file %s: %v", path, err)
 		}
 
-		manifests := msort.NewManifests(string(yml))
-
-		if os.Getenv("DISABLE_KEY_SORTING") == "" {
-			manifests.SortByKeys()
+		output, err := msort.Sort(yml, sortKeys, dropTests)
+		if err != nil {
+			return fmt.Errorf("sort stdin: %v", err)
 		}
 
-		if os.Getenv("KEEP_TESTS") == "" {
-			manifests.DropTest()
-		}
-
-		manifests.SortDocuments()
-
-		_, err = fmt.Print(manifests.String())
+		_, err = fmt.Print(output)
 		if err != nil {
 			return fmt.Errorf("write to stdout: %v", err)
 		}

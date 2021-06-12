@@ -15,16 +15,16 @@ var goldenCase1 []byte
 
 func Test_main(t *testing.T) {
 	tests := []struct {
-		name    string
-		in      string
-		golden  string
-		keySort bool
+		name      string
+		in        string
+		golden    string
+		keySort   bool
+		dropTests bool
 	}{
 		{
-			name:    "sort output of helmfile template",
-			in:      "testdata/case1.yaml",
-			golden:  "testdata/case1.golden.yaml",
-			keySort: false,
+			name:   "sort output of helmfile template",
+			in:     "testdata/case1.yaml",
+			golden: "testdata/case1.golden.yaml",
 		},
 		{
 			name:    "sort keys for none kubernetes manifests",
@@ -33,10 +33,10 @@ func Test_main(t *testing.T) {
 			keySort: true,
 		},
 		{
-			name:    "drop only test",
-			in:      "testdata/case3.yaml",
-			golden:  "testdata/case3.golden.yaml",
-			keySort: false,
+			name:      "drop only test",
+			in:        "testdata/case3.yaml",
+			golden:    "testdata/case3.golden.yaml",
+			dropTests: true,
 		},
 	}
 	for _, tt := range tests {
@@ -51,12 +51,17 @@ func Test_main(t *testing.T) {
 			r, w, _ := os.Pipe()
 			os.Stdout = w
 
-			os.Args = []string{rescueArgs[0], tt.in}
+			os.Args = []string{rescueArgs[0]}
 
-			os.Setenv("DISABLE_KEY_SORTING", "1")
 			if tt.keySort {
-				os.Setenv("DISABLE_KEY_SORTING", "")
+				os.Args = append(os.Args, "--sort-keys")
 			}
+
+			if tt.dropTests {
+				os.Args = append(os.Args, "--drop-tests")
+			}
+
+			os.Args = append(os.Args, tt.in)
 
 			main()
 

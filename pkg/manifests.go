@@ -1,12 +1,32 @@
 package msort
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"regexp"
 	"sort"
 	"strings"
 )
+
+func Sort(in []byte, sortKeys, dropTests bool) (string, error) {
+	manifests := NewManifests(string(in))
+
+	if sortKeys {
+		err := manifests.SortByKeys()
+		if err != nil {
+			return "", fmt.Errorf("sort document by key: %v", err)
+		}
+	}
+
+	if dropTests {
+		manifests.DropTest()
+	}
+
+	manifests.SortDocuments()
+
+	return manifests.String(), nil
+}
 
 type manifests []manifest
 
@@ -57,7 +77,7 @@ func (m manifests) SortByKeys() error {
 	return nil
 }
 
-func (m *manifests) DropTest() error {
+func (m *manifests) DropTest() {
 	filtered := []manifest{}
 
 	for _, manifest := range *m {
@@ -69,12 +89,30 @@ func (m *manifests) DropTest() error {
 	}
 
 	*m = filtered
-
-	return nil
 }
 
 func (m manifests) SortDocuments() {
 	sort.Sort(byKind(m))
+}
+
+type byKind []manifest
+
+func (a byKind) Len() int      { return len(a) }
+func (a byKind) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byKind) Less(i, j int) bool {
+	if a[i].Kind != a[j].Kind {
+		return a[i].Kind < a[j].Kind
+	}
+
+	if a[i].Metadata.Namespace != a[j].Metadata.Namespace {
+		return a[i].Metadata.Namespace < a[j].Metadata.Namespace
+	}
+
+	if a[i].Metadata.Name != a[j].Metadata.Name {
+		return a[i].Metadata.Name < a[j].Metadata.Name
+	}
+
+	return a[i].Yaml < a[j].Yaml
 }
 
 func (m manifests) String() string {
@@ -104,24 +142,4 @@ func (m manifests) String() string {
 	}
 
 	return buf.String()
-}
-
-type byKind []manifest
-
-func (a byKind) Len() int      { return len(a) }
-func (a byKind) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a byKind) Less(i, j int) bool {
-	if a[i].Kind != a[j].Kind {
-		return a[i].Kind < a[j].Kind
-	}
-
-	if a[i].Metadata.Namespace != a[j].Metadata.Namespace {
-		return a[i].Metadata.Namespace < a[j].Metadata.Namespace
-	}
-
-	if a[i].Metadata.Name != a[j].Metadata.Name {
-		return a[i].Metadata.Name < a[j].Metadata.Name
-	}
-
-	return a[i].Yaml < a[j].Yaml
 }
