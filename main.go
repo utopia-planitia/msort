@@ -32,6 +32,12 @@ func run(args []string) error {
 				Usage: "remove yaml documents with \"test\" in its name",
 				Value: false,
 			},
+			&cli.BoolFlag{
+				Name:    "in-place",
+				Aliases: []string{"i"},
+				Usage:   "update files in place",
+				Value:   false,
+			},
 		},
 		Action: sortYamlFiles,
 	}
@@ -52,6 +58,9 @@ func sortYamlFiles(c *cli.Context) error {
 
 	sortKeys := c.Bool("sort-keys")
 	dropTests := c.Bool("drop-tests")
+	inPlace := c.Bool("in-place")
+
+	firstDocument := true
 
 	if stdinPipe {
 		yml, err := ioutil.ReadAll(os.Stdin)
@@ -63,6 +72,8 @@ func sortYamlFiles(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("sort stdin: %v", err)
 		}
+
+		firstDocument = false
 
 		_, err = fmt.Print(output)
 		if err != nil {
@@ -80,6 +91,23 @@ func sortYamlFiles(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("sort stdin: %v", err)
 		}
+
+		if inPlace {
+			err = ioutil.WriteFile(path, []byte(output), 0666)
+			if err != nil {
+				return fmt.Errorf("update %s in place: %v", path, err)
+			}
+			continue
+		}
+
+		if !firstDocument {
+			_, err := fmt.Print("---\n")
+			if err != nil {
+				log.Fatalf("write document seperator to buffer: %v", err)
+			}
+		}
+
+		firstDocument = false
 
 		_, err = fmt.Print(output)
 		if err != nil {
