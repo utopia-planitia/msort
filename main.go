@@ -12,6 +12,13 @@ import (
 )
 
 func main() {
+	err := run()
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+}
+
+func run() error {
 	yml := []byte{}
 	var err error = nil
 
@@ -21,7 +28,7 @@ func main() {
 		yml, err = ioutil.ReadFile(os.Args[1])
 	}
 	if err != nil {
-		log.Fatalln(err.Error())
+		return err
 	}
 
 	manifests := msort.SplitManifests(string(yml))
@@ -30,7 +37,7 @@ func main() {
 		for i := range manifests {
 			manifests[i].Yaml, err = msort.SortedByKeys(manifests[i].Yaml)
 			if err != nil {
-				log.Fatalln(err.Error())
+				return err
 			}
 		}
 	}
@@ -48,7 +55,7 @@ func main() {
 
 		yaml, err := manifest.Print()
 		if err != nil {
-			log.Fatalln(err.Error())
+			return err
 		}
 
 		if strings.TrimSpace(yaml) == "" {
@@ -58,7 +65,7 @@ func main() {
 		if !first {
 			_, err = fmt.Print("---\n")
 			if err != nil {
-				log.Fatalln(err.Error())
+				return err
 			}
 		}
 
@@ -66,7 +73,9 @@ func main() {
 
 		_, err = fmt.Printf("%s\n", strings.TrimSpace(yaml))
 		if err != nil {
-			log.Fatalln(err.Error())
+			return err
 		}
 	}
+
+	return nil
 }
