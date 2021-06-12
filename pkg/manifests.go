@@ -1,4 +1,4 @@
-package main
+package msort
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ type manifest struct {
 		Name      string
 		Namespace string
 	}
-	yaml string
+	Yaml string
 }
 
 // ByOrder sorts manifests by kind, namespace and name.
@@ -39,10 +39,10 @@ func (a ByOrder) Less(i, j int) bool {
 		return a[i].Metadata.Name < a[j].Metadata.Name
 	}
 
-	return a[i].yaml < a[j].yaml
+	return a[i].Yaml < a[j].Yaml
 }
 
-func splitManifests(yml string) []manifest {
+func SplitManifests(yml string) []manifest {
 	yml = strings.TrimSpace(yml)
 
 	if strings.HasPrefix(yml, "---\n") {
@@ -87,13 +87,13 @@ func parseManifest(yml string) (manifest, error) {
 		return manifest{}, err
 	}
 
-	m.yaml = yml
+	m.Yaml = yml
 
 	return m, nil
 }
 
 func (m manifest) Print() (string, error) {
-	return m.yaml, nil
+	return m.Yaml, nil
 }
 
 func SortedByKeys(in string) (string, error) {

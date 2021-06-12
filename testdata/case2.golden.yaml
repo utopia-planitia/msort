@@ -1,0 +1,8 @@
+abc: def
+abcd: defd
+# comment
+ghi: jkl
+klm: nop
+---
+bar: 1
+foo: fara
