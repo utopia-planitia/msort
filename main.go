@@ -54,7 +54,7 @@ func sortYamlFiles(c *cli.Context) error {
 			manifests.DropTest()
 		}
 
-		manifests.OrderDocuments()
+		manifests.SortDocuments()
 
 		_, err = fmt.Print(manifests.String())
 		if err != nil {
@@ -78,7 +78,7 @@ func sortYamlFiles(c *cli.Context) error {
 			manifests.DropTest()
 		}
 
-		manifests.OrderDocuments()
+		manifests.SortDocuments()
 
 		_, err = fmt.Print(manifests.String())
 		if err != nil {

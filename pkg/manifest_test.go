@@ -2,7 +2,7 @@ package msort
 
 import "testing"
 
-func TestSortedByKeys(t *testing.T) {
+func TestSortByKeys(t *testing.T) {
 	tests := []struct {
 		name    string
 		in      string
@@ -32,11 +32,17 @@ func TestSortedByKeys(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SortedByKeys(tt.in)
+			manifest := manifest{
+				Yaml: tt.in,
+			}
+
+			err := manifest.SortByKeys()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SortedByKeys() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			got := manifest.Yaml
 			if got != tt.out {
 				t.Errorf("SortedByKeys() = %v, want %v", got, tt.out)
 			}
