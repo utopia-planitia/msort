@@ -32,7 +32,7 @@ GLOBAL OPTIONS:
 
 ## Example
 
-Sort yaml documents within `manifests.yaml` by Kind, Name, and Namspace, then print the result to `stdout`.
+Sort yaml documents within `file.yaml` by Kind, Name, and Namspace, then print the result to `stdout`.
 
 ``` bash
 msort --in-place --sort-keys file.yaml
@@ -44,8 +44,8 @@ Read `file.yaml`, sort by Kind, Name, and Namespace, then and sort maps by key a
 msort --in-place --sort-keys file.yaml
 ```
 
-Sort the output of `helmfile template` by Kind, Name, and Namespace, then remove kubernetes manifests with `test` in their name, then write to `stdout`.
+Sort the output of `helmfile template` by Kind, Name, and Namespace, then remove kubernetes manifests with `test` in their name, then print to `stdout` and redirect to `file.yaml`.
 
 ``` bash
-helmfile template | msort --drop-tests > manifests.yaml
+helmfile template | msort --drop-tests > file.yaml
 ```
