@@ -1,6 +1,6 @@
 module github.com/utopia-planitia/msort
 
-go 1.18
+go 1.19
 
 require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
