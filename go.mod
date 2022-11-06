@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
-	github.com/urfave/cli/v2 v2.23.2
+	github.com/urfave/cli/v2 v2.23.4
 	gopkg.in/yaml.v3 v3.0.1
 )
 
