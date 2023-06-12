@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 
@@ -63,7 +63,7 @@ func sortYamlFiles(c *cli.Context) error {
 	firstDocument := true
 
 	if stdinPipe {
-		yml, err := ioutil.ReadAll(os.Stdin)
+		yml, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("read stdin: %v", err)
 		}
@@ -82,7 +82,7 @@ func sortYamlFiles(c *cli.Context) error {
 	}
 
 	for _, path := range c.Args().Slice() {
-		yml, err := ioutil.ReadFile(path)
+		yml, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("read file %s: %v", path, err)
 		}
@@ -93,7 +93,7 @@ func sortYamlFiles(c *cli.Context) error {
 		}
 
 		if inPlace {
-			err = ioutil.WriteFile(path, []byte(output), 0666)
+			err = os.WriteFile(path, []byte(output), 0666)
 			if err != nil {
 				return fmt.Errorf("update %s in place: %v", path, err)
 			}

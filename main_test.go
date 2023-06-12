@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -63,12 +63,12 @@ func Test_main(t *testing.T) {
 			main()
 
 			w.Close()
-			out, err := ioutil.ReadAll(r)
+			out, err := io.ReadAll(r)
 			if err != nil {
 				t.Fatalf("read generated output: %v", err)
 			}
 
-			golden, err := ioutil.ReadFile(tt.golden)
+			golden, err := os.ReadFile(tt.golden)
 			if err != nil {
 				t.Fatalf("read golden file %s: %v", tt.golden, err)
 			}
